@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Character API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .api-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .api-section h2 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #ffd700;
+            color: #333;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.6em;
+            font-weight: bold;
+        }
+
+        .badge.nekos {
+            background: #ff6b9d;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .char-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .char-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .char-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .char-btn.loading {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .count {
+            display: block;
+            font-size: 0.75em;
+            color: #718096;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        .preview-panel {
+            background: white;
+            color: #333;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .preview-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preview-title {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .api-url {
+            background: #2d3748;
+            color: #68d391;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .image-container {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .info-box {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #4a5568;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .copy-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #38a169;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .preview-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .api-url {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎌 Anime Character API Tester</h1>
+            <p>Test character-specific endpoints from waifu.im and nekos.best</p>
+        </header>
+
+        <!-- Waifu.im Section -->
+        <div class="api-section">
+            <h2>
+                Waifu.im - Character Endpoints
+                <span class="badge">SFW Only</span>
+            </h2>
+            <div class="grid">
+                <button class="char-btn" onclick="testWaifuIm('marin-kitagawa', 'Marin Kitagawa', '47 images')">
+                    Marin Kitagawa
+                    <span class="count">My Dress-Up Darling • 47 images</span>
+                </button>
+                <button class="char-btn" onclick="testWaifuIm('raiden-shogun', 'Raiden Shogun', '69 images')">
+                    Raiden Shogun
+                    <span class="count">Genshin Impact • 69 images</span>
+                </button>
+                <button class="char-btn" onclick="testWaifuIm('kamisato-ayaka', 'Kamisato Ayaka', '14 images')">
+                    Kamisato Ayaka
+                    <span class="count">Genshin Impact • 14 images</span>
+                </button>
+                <button class="char-btn" onclick="testWaifuIm('rem', 'Rem', '12 images')">
+                    Rem
+                    <span class="count">Re:Zero • 12 images</span>
+                </button>
+                <button class="char-btn" onclick="testWaifuIm('mori-calliope', 'Mori Calliope', '26 images')">
+                    Mori Calliope
+                    <span class="count">VTuber • 26 images</span>
+                </button>
+                <button class="char-btn" onclick="testWaifuIm('genshin-impact', 'Genshin Impact', '84 images')">
+                    Genshin Impact
+                    <span class="count">All Characters • 84 images</span>
+                </button>
+                
+            </div>
+        </div>
+
+        <!-- Nekos.best Section -->
+        <div class="api-section">
+            <h2>
+                Nekos.best - Character Types
+                <span class="badge nekos">Fast API</span>
+            </h2>
+            <div class="grid">
+                <button class="char-btn" onclick="testNekos('waifu', 'Waifu', 'Random waifu images')">
+                    Waifu
+                    <span class="count">Random waifu images</span>
+                </button>
+                <button class="char-btn" onclick="testNekos('neko', 'Neko', 'Cat girl images')">
+                    Neko
+                    <span class="count">Cat girl images</span>
+                </button>
+                <button class="char-btn" onclick="testNekos('kitsune', 'Kitsune', 'Fox girl images')">
+                    Kitsune
+                    <span class="count">Fox girl images</span>
+                </button>
+                <button class="char-btn" onclick="testNekos('husbando', 'Husbando', 'Male characters')">
+                    Husbando
+                    <span class="count">Male characters</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel" id="previewPanel">
+            <div class="preview-header">
+                <div class="preview-title" id="previewTitle">Character Name</div>
+                <button class="copy-btn" onclick="copyImageUrl()">Copy Image URL</button>
+            </div>
+            <div class="api-url" id="apiUrl">https://...</div>
+            <div class="image-container">
+                <img id="previewImage" src="" alt="Character Preview">
+            </div>
+            <div class="info-box" id="infoBox">
+                <p><strong>Source:</strong> <span id="sourceInfo">-</span></p>
+                <p><strong>Artist:</strong> <span id="artistInfo">-</span></p>
+            </div>
+            <div class="error-msg" id="errorMsg" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentImageUrl = '';
+
+        async function testWaifuIm(tag, name, count) {
+            const panel = document.getElementById('previewPanel');
+            const title = document.getElementById('previewTitle');
+            const urlDiv = document.getElementById('apiUrl');
+            const img = document.getElementById('previewImage');
+            const errorMsg = document.getElementById('errorMsg');
+            const sourceInfo = document.getElementById('sourceInfo');
+            const artistInfo = document.getElementById('artistInfo');
+            
+            panel.classList.add('active');
+            title.textContent = `${name} (${count})`;
+            errorMsg.style.display = 'none';
+            
+            const url = `https://api.waifu.im/images?IncludedTags=${tag}&IsNsfw=False`;
+            urlDiv.textContent = url;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('API request failed');
+                
+                const data = await response.json();
+                
+                if (!data.items || data.items.length === 0) {
+                    throw new Error('No images found for this character');
+                }
+                
+                const imageData = data.items[0];
+                currentImageUrl = imageData.url;
+                img.src = currentImageUrl;
+                
+                // Extract info
+                sourceInfo.textContent = imageData.source || 'Unknown';
+                artistInfo.textContent = imageData.artists && imageData.artists.length > 0 
+                    ? imageData.artists[0].name 
+                    : 'Unknown';
+                
+            } catch (err) {
+                errorMsg.textContent = `Error: ${err.message}`;
+                errorMsg.style.display = 'block';
+                img.src = '';
+            }
+        }
+
+        async function testNekos(endpoint, name, desc) {
+            const panel = document.getElementById('previewPanel');
+            const title = document.getElementById('previewTitle');
+            const urlDiv = document.getElementById('apiUrl');
+            const img = document.getElementById('previewImage');
+            const errorMsg = document.getElementById('errorMsg');
+            const sourceInfo = document.getElementById('sourceInfo');
+            const artistInfo = document.getElementById('artistInfo');
+            
+            panel.classList.add('active');
+            title.textContent = `${name} - ${desc}`;
+            errorMsg.style.display = 'none';
+            
+            const url = `https://nekos.best/api/v2/${endpoint}`;
+            urlDiv.textContent = url;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('API request failed');
+                
+                const data = await response.json();
+                
+                if (!data.results || data.results.length === 0) {
+                    throw new Error('No images found');
+                }
+                
+                const imageData = data.results[0];
+                currentImageUrl = imageData.url;
+                img.src = currentImageUrl;
+                
+                // Extract info
+                sourceInfo.textContent = 'nekos.best';
+                artistInfo.textContent = imageData.anime_name || 'Unknown';
+                
+            } catch (err) {
+                errorMsg.textContent = `Error: ${err.message}`;
+                errorMsg.style.display = 'block';
+                img.src = '';
+            }
+        }
+
+        function copyImageUrl() {
+            if (currentImageUrl) {
+                navigator.clipboard.writeText(currentImageUrl).then(() => {
+                    alert('Image URL copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy URL');
+                });
+            }
+        }
+
+        // Add loading states to buttons
+        document.querySelectorAll('.char-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('loading'));
+                this.classList.add('loading');
+                setTimeout(() => this.classList.remove('loading'), 2000);
+            });
+        });
+    </script>
+</body>
+</html>
